@@ -1,0 +1,3 @@
+# Data Contracts Schema
+
+Placeholder.
