@@ -33,6 +33,9 @@ Proyek ini menolak status quo pengembangan AI modern yang terjebak pada pembesar
 - `docs/04_data_contracts_schema.md` - telemetry payload contract
 - `docs/05_civilization_blueprint_v1_3_robot_os.md` - robot OS spec from blueprint v1.3
 - `docs/06_changelog_v1_to_v1_3.md` - version evolution summary
+- `docs/07_vision_brief.md` - one-page pitch version
+- `docs/08_technical_whitepaper.md` - technical architecture paper
+- `docs/09_architecture_rfc.md` - architecture RFC and migration plan
 
 ## 1. Arsitektur Komputasi: Cloud-to-Edge Stack
 
