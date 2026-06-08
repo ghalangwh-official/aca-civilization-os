@@ -95,9 +95,14 @@ def load_sensor_payload(path: str | Path) -> dict[str, Any]:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
-def emit_telemetry(sensor_frame: Mapping[str, Any], config: TelemetryBridgeConfig) -> dict[str, Any]:
+def emit_telemetry(
+    sensor_frame: Mapping[str, Any],
+    config: TelemetryBridgeConfig,
+    *,
+    timestamp_ms: int | None = None,
+) -> dict[str, Any]:
     """Build payload ready for cloud ingestion."""
-    return normalize_telemetry(sensor_frame, config)
+    return normalize_telemetry(sensor_frame, config, timestamp_ms=timestamp_ms)
 
 
 def main() -> None:

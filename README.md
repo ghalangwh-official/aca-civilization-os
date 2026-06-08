@@ -37,6 +37,7 @@ Proyek ini menolak status quo pengembangan AI modern yang terjebak pada pembesar
 - `docs/08_technical_whitepaper.md` - technical architecture paper
 - `docs/09_architecture_rfc.md` - architecture RFC and migration plan
 - `docs/10_external_pitch_pack.md` - external pitch pack and 5-slide narrative
+- `docs/11_roadmap_and_contribution.md` - roadmap and contributor onboarding
 
 ## 1. Arsitektur Komputasi: Cloud-to-Edge Stack
 
@@ -185,3 +186,18 @@ Kami mencari core-developer global di bidang:
 
 **An architecture conceptualized and designed by @ghalangwh.official.**  
 For official inquiries, engineering collaborations, or hardware integration partnerships, please open an issue or reach out via official social media channels.
+
+## 8. Live Demo
+
+Use the local demo runner to exercise the shape of the system end-to-end without requiring a live ROS 2 or Kafka deployment:
+
+```bash
+python3 scripts/demo_end_to_end.py
+```
+
+## 9. Contributing
+
+- Read [CONTRIBUTING.md](CONTRIBUTING.md)
+- Pick an item from [docs/11_roadmap_and_contribution.md](docs/11_roadmap_and_contribution.md)
+- Open a GitHub issue using the provided templates
+- Keep changes small and testable
