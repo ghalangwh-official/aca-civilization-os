@@ -47,9 +47,9 @@ services:
     image: timescale/timescaledb:latest-pg15
     container_name: aca-timescaledb
     environment:
-      POSTGRES_USER: aca_architect
-      POSTGRES_PASSWORD: aca_secure_password_2026
-      POSTGRES_DB: aca_civilization_ledger
+      POSTGRES_USER: ${ACA_DB_USER:-aca_architect}
+      POSTGRES_PASSWORD: ${ACA_DB_PASSWORD:?Set ACA_DB_PASSWORD in aca-kernel-core/.env}
+      POSTGRES_DB: ${ACA_DB_NAME:-aca_civilization_ledger}
     ports:
       - "5432:5432"
     volumes:

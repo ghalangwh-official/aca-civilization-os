@@ -148,6 +148,13 @@ ACA OS menerapkan mitigasi brutal untuk mencegah instruksi cloud yang salah meru
 - Docker Compose
 - Linux Ubuntu 22.04 LTS atau lebih baru
 
+### Konfigurasi Aman
+
+- Salin `aca-kernel-core/.env.example` ke `aca-kernel-core/.env`
+- Isi `ACA_DB_PASSWORD` dengan secret lokal Anda
+- Salin `aca-edge-ros2/config/robot_profile.example.yaml` ke `aca-edge-ros2/config/robot_profile.yaml`
+- Sesuaikan batas robot per hardware sebelum deployment
+
 ### Inisialisasi Klaster Pusat Cloud
 
 1. Kloning repositori ini:

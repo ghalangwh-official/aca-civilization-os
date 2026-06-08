@@ -11,6 +11,8 @@ log/
 # Local env
 .env
 .env.*
+!.env.example
+!**/.env.example
 
 # OS/editor
 .DS_Store

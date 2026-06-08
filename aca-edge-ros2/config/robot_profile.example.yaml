@@ -1,0 +1,14 @@
+# Copy this file to robot_profile.yaml and tune it per robot hardware.
+
+robot_id: ROB-2026-PHYSICAL-0043
+species: Builder_Worker
+hardware_version: AGV-QUADRUPED-V2.1
+
+safety_limits:
+  max_wheel_velocity_rps: 4.5
+  min_battery_percent: 20.0
+  max_heading_delta_deg: 90.0
+
+telemetry:
+  topic: aca.builder.telemetry
+  max_embedding_items: 512

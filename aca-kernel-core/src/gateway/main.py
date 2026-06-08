@@ -1,14 +1,11 @@
 """ACA Cloud Kernel ingestion gateway.
 
-This service consumes robot telemetry from Kafka and persists the normalized
-measurements into TimescaleDB. It is intentionally small and explicit:
+This service consumes robot telemetry from Kafka and persists normalized
+measurements into TimescaleDB.
 
-- Kafka topic: ``aca.builder.telemetry``
-- Database table: ``raw_robot_telemetry``
-- Columns stored: time, robot_id, battery_voltage, velocity_rps
-
-The process is resilient to malformed JSON payloads, transient Kafka outages,
-and delayed database availability.
+The module keeps configuration in environment variables, avoids hardcoded
+secrets, and can still be imported in environments where Kafka or PostgreSQL
+drivers are not installed yet (for example during unit tests).
 """
 
 from __future__ import annotations
@@ -20,10 +17,27 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-import psycopg2
-from kafka import KafkaConsumer
-from kafka.errors import KafkaError, NoBrokersAvailable
-from psycopg2 import OperationalError
+try:  # pragma: no cover - exercised in runtime environment
+    import psycopg2
+    from psycopg2 import OperationalError
+except ImportError:  # pragma: no cover - import guard for test environments
+    psycopg2 = None
+
+    class OperationalError(Exception):
+        """Fallback when psycopg2 is unavailable."""
+
+
+try:  # pragma: no cover - exercised in runtime environment
+    from kafka import KafkaConsumer
+    from kafka.errors import KafkaError, NoBrokersAvailable
+except ImportError:  # pragma: no cover - import guard for test environments
+    KafkaConsumer = None
+
+    class KafkaError(Exception):
+        """Fallback when kafka-python is unavailable."""
+
+    class NoBrokersAvailable(KafkaError):
+        """Fallback when kafka-python is unavailable."""
 
 log = logging.getLogger("aca.gateway")
 
@@ -31,7 +45,6 @@ DEFAULT_DB_HOST = "localhost"
 DEFAULT_DB_PORT = 5432
 DEFAULT_DB_NAME = "aca_civilization_ledger"
 DEFAULT_DB_USER = "aca_architect"
-DEFAULT_DB_PASSWORD = "aca_secure_password_2026"
 DEFAULT_KAFKA_BROKER = "localhost:9092"
 DEFAULT_KAFKA_TOPIC = "aca.builder.telemetry"
 DEFAULT_KAFKA_GROUP_ID = "aca-kernel-core-gateway"
@@ -39,15 +52,34 @@ DEFAULT_KAFKA_GROUP_ID = "aca-kernel-core-gateway"
 
 @dataclass(frozen=True)
 class Settings:
-    db_host: str = os.getenv("ACA_DB_HOST", DEFAULT_DB_HOST)
-    db_port: int = int(os.getenv("ACA_DB_PORT", str(DEFAULT_DB_PORT)))
-    db_name: str = os.getenv("ACA_DB_NAME", DEFAULT_DB_NAME)
-    db_user: str = os.getenv("ACA_DB_USER", DEFAULT_DB_USER)
-    db_password: str = os.getenv("ACA_DB_PASSWORD", DEFAULT_DB_PASSWORD)
-    kafka_broker: str = os.getenv("ACA_KAFKA_BROKER", DEFAULT_KAFKA_BROKER)
-    kafka_topic: str = os.getenv("ACA_KAFKA_TOPIC", DEFAULT_KAFKA_TOPIC)
-    kafka_group_id: str = os.getenv("ACA_KAFKA_GROUP_ID", DEFAULT_KAFKA_GROUP_ID)
-    poll_timeout_ms: int = int(os.getenv("ACA_KAFKA_POLL_TIMEOUT_MS", "1000"))
+    db_host: str
+    db_port: int
+    db_name: str
+    db_user: str
+    db_password: str
+    kafka_broker: str
+    kafka_topic: str
+    kafka_group_id: str
+    poll_timeout_ms: int
+
+    @classmethod
+    def from_env(cls) -> "Settings":
+        db_password = os.getenv("ACA_DB_PASSWORD", "")
+        if not db_password:
+            raise RuntimeError(
+                "ACA_DB_PASSWORD is required. Set it in the environment or in aca-kernel-core/.env."
+            )
+        return cls(
+            db_host=os.getenv("ACA_DB_HOST", DEFAULT_DB_HOST),
+            db_port=int(os.getenv("ACA_DB_PORT", str(DEFAULT_DB_PORT))),
+            db_name=os.getenv("ACA_DB_NAME", DEFAULT_DB_NAME),
+            db_user=os.getenv("ACA_DB_USER", DEFAULT_DB_USER),
+            db_password=db_password,
+            kafka_broker=os.getenv("ACA_KAFKA_BROKER", DEFAULT_KAFKA_BROKER),
+            kafka_topic=os.getenv("ACA_KAFKA_TOPIC", DEFAULT_KAFKA_TOPIC),
+            kafka_group_id=os.getenv("ACA_KAFKA_GROUP_ID", DEFAULT_KAFKA_GROUP_ID),
+            poll_timeout_ms=int(os.getenv("ACA_KAFKA_POLL_TIMEOUT_MS", "1000")),
+        )
 
 
 def setup_logging() -> None:
@@ -58,6 +90,8 @@ def setup_logging() -> None:
 
 
 def get_db_connection(settings: Settings):
+    if psycopg2 is None:
+        raise RuntimeError("psycopg2 is not installed in this environment.")
     return psycopg2.connect(
         host=settings.db_host,
         port=settings.db_port,
@@ -69,6 +103,8 @@ def get_db_connection(settings: Settings):
 
 def init_db(settings: Settings) -> None:
     """Create extension, table, and hypertable if possible."""
+    if psycopg2 is None:
+        raise RuntimeError("psycopg2 is not installed in this environment.")
     with get_db_connection(settings) as conn:
         conn.autocommit = True
         with conn.cursor() as cur:
@@ -116,6 +152,8 @@ def extract_measurements(payload: dict[str, Any]) -> tuple[str, float, float]:
 
 
 def insert_row(settings: Settings, robot_id: str, battery_voltage: float, velocity_rps: float) -> None:
+    if psycopg2 is None:
+        raise RuntimeError("psycopg2 is not installed in this environment.")
     with get_db_connection(settings) as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -141,6 +179,8 @@ def wait_for_database(settings: Settings, retries: int = 30, delay_seconds: floa
 
 
 def create_consumer(settings: Settings) -> KafkaConsumer:
+    if KafkaConsumer is None:
+        raise RuntimeError("kafka-python is not installed in this environment.")
     return KafkaConsumer(
         settings.kafka_topic,
         bootstrap_servers=[settings.kafka_broker],
@@ -208,7 +248,7 @@ def run(settings: Settings) -> None:
 
 def main() -> None:
     setup_logging()
-    settings = Settings()
+    settings = Settings.from_env()
     run(settings)
 
 
