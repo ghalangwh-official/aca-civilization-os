@@ -36,6 +36,7 @@ Proyek ini menolak status quo pengembangan AI modern yang terjebak pada pembesar
 - `docs/07_vision_brief.md` - one-page pitch version
 - `docs/08_technical_whitepaper.md` - technical architecture paper
 - `docs/09_architecture_rfc.md` - architecture RFC and migration plan
+- `docs/10_external_pitch_pack.md` - external pitch pack and 5-slide narrative
 
 ## 1. Arsitektur Komputasi: Cloud-to-Edge Stack
 
