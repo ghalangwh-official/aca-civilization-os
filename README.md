@@ -22,6 +22,17 @@ Proyek ini menolak status quo pengembangan AI modern yang terjebak pada pembesar
 
 - [ACA Civilization Blueprint v1.0](docs/00_civilization_blueprint_v1.md)
 - [Open Civilization Blueprint v1.3 - Cyber-Physical Robot OS Specs](docs/05_civilization_blueprint_v1_3_robot_os.md)
+- [ACA Blueprint Changelog v1.0 to v1.3](docs/06_changelog_v1_to_v1_3.md)
+
+### Docs Series
+
+- `docs/00_civilization_blueprint_v1.md` - civilization foundation
+- `docs/01_architecture_overview.md` - system architecture baseline
+- `docs/02_mathematical_core.md` - reputation and dissent model
+- `docs/03_security_threat_model.md` - threat model and mitigations
+- `docs/04_data_contracts_schema.md` - telemetry payload contract
+- `docs/05_civilization_blueprint_v1_3_robot_os.md` - robot OS spec from blueprint v1.3
+- `docs/06_changelog_v1_to_v1_3.md` - version evolution summary
 
 ## 1. Arsitektur Komputasi: Cloud-to-Edge Stack
 
