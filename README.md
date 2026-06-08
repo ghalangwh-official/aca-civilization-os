@@ -18,6 +18,10 @@ ACA OS (Artificial Civilization Architecture Operating System) adalah arsitektur
 
 Proyek ini menolak status quo pengembangan AI modern yang terjebak pada pembesaran skala model tunggal atau bot kosmetik. ACA OS mengadopsi logika sosial ke tingkat instruksi mesin: pengetahuan diwariskan, kesalahan dicatat, dan generasi baru tidak memulai dari nol.
 
+### Blueprint Reference
+
+- [ACA Civilization Blueprint v1.0](docs/00_civilization_blueprint_v1.md)
+
 ## 1. Arsitektur Komputasi: Cloud-to-Edge Stack
 
 ```text
