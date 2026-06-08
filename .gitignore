@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# ROS 2 / colcon
+build/
+install/
+log/
+
+# Local env
+.env
+.env.*
+
+# OS/editor
+.DS_Store
+Thumbs.db
