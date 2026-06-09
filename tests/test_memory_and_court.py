@@ -3,6 +3,8 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 import sys
+import os
+import tempfile
 import unittest
 
 
@@ -25,6 +27,25 @@ court = load_module(COURT_PATH, "aca_court_judge")
 
 
 class MemoryAndCourtTests(unittest.TestCase):
+    def setUp(self):
+        self._tmpdir = tempfile.TemporaryDirectory()
+        self._previous_state_dir = os.environ.get("ACA_STATE_DIR")
+        self._previous_enable_qdrant = os.environ.get("ACA_ENABLE_QDRANT")
+        os.environ["ACA_STATE_DIR"] = self._tmpdir.name
+        os.environ["ACA_ENABLE_QDRANT"] = "0"
+
+    def tearDown(self):
+        if self._previous_state_dir is None:
+            os.environ.pop("ACA_STATE_DIR", None)
+        else:
+            os.environ["ACA_STATE_DIR"] = self._previous_state_dir
+
+        if self._previous_enable_qdrant is None:
+            os.environ.pop("ACA_ENABLE_QDRANT", None)
+        else:
+            os.environ["ACA_ENABLE_QDRANT"] = self._previous_enable_qdrant
+        self._tmpdir.cleanup()
+
     def test_memory_store_search_orders_by_similarity(self):
         store = memory.MemoryStore(enable_qdrant=False)
         store.add("robot learned to avoid dead end corridor", kind="lesson")

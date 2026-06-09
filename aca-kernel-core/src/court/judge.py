@@ -18,6 +18,7 @@ SRC_ROOT = Path(__file__).resolve().parents[1]
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+from audit.ledger import append_jsonl, default_state_dir, ensure_state_dir, read_jsonl
 from memory.store import MemoryStore
 
 log = logging.getLogger("aca.court")
@@ -43,6 +44,26 @@ class CourtJudge:
     memory: MemoryStore
     approval_threshold: float = DEFAULT_APPROVAL_THRESHOLD
     dissent_threshold: float = DEFAULT_DISSENT_THRESHOLD
+    audit_dir: str | Path | None = None
+    audit_file_name: str = "court_decisions.jsonl"
+    audit_path: Path = field(init=False)
+
+    def __post_init__(self) -> None:
+        base_dir = self.audit_dir or getattr(self.memory, "state_dir", None) or default_state_dir()
+        self.audit_path = ensure_state_dir(base_dir) / self.audit_file_name
+
+    def _record_decision(self, decision: CourtDecision) -> None:
+        append_jsonl(
+            self.audit_path,
+            {
+                "case_id": decision.case_id,
+                "claim": decision.claim,
+                "verdict": decision.verdict,
+                "confidence": decision.confidence,
+                "reasons": decision.reasons,
+                "evidence": decision.evidence,
+            },
+        )
 
     def evaluate(self, claim: str, *, case_id: str | None = None) -> CourtDecision:
         case_id = case_id or hashlib.sha256(claim.encode("utf-8")).hexdigest()[:16]
@@ -72,7 +93,7 @@ class CourtJudge:
                 metadata={"case_id": case_id, "status": "retained_for_review"},
             )
 
-        return CourtDecision(
+        decision = CourtDecision(
             case_id=case_id,
             claim=claim,
             verdict=verdict,
@@ -80,9 +101,14 @@ class CourtJudge:
             reasons=reasons,
             evidence=evidence,
         )
+        self._record_decision(decision)
+        return decision
 
     def review_many(self, claims: Iterable[str]) -> list[CourtDecision]:
         return [self.evaluate(claim) for claim in claims]
+
+    def load_audit(self) -> list[dict[str, Any]]:
+        return read_jsonl(self.audit_path)
 
 
 def evaluate_claim(claim: str, memory: MemoryStore | None = None) -> CourtDecision:

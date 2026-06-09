@@ -14,6 +14,9 @@ log/
 !.env.example
 !**/.env.example
 
+# Runtime state
+.state/
+
 # OS/editor
 .DS_Store
 Thumbs.db

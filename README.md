@@ -39,6 +39,7 @@ Proyek ini menolak status quo pengembangan AI modern yang terjebak pada pembesar
 - `docs/10_external_pitch_pack.md` - external pitch pack and 5-slide narrative
 - `docs/11_roadmap_and_contribution.md` - roadmap and contributor onboarding
 - `docs/12_memory_and_court.md` - memory and court implementation notes
+- `docs/13_memory_court_audit_trail.md` - persistence and audit trail notes
 
 ## 1. Arsitektur Komputasi: Cloud-to-Edge Stack
 
@@ -196,7 +197,20 @@ Use the local demo runner to exercise the shape of the system end-to-end without
 python3 scripts/demo_end_to_end.py
 ```
 
-## 9. Contributing
+## 9. Civilization Service
+
+The minimal service boundary binds memory and court into one workflow:
+
+```bash
+python3 aca-kernel-core/src/civilization/service.py snapshot --pretty
+python3 aca-kernel-core/src/civilization/service.py remember --kind lesson --text "..."
+python3 aca-kernel-core/src/civilization/service.py judge --claim "..."
+python3 aca-kernel-core/src/civilization/service.py search --query "..."
+```
+
+This is the first step toward a local API or dashboard layer.
+
+## 10. Contributing
 
 - Read [CONTRIBUTING.md](CONTRIBUTING.md)
 - Pick an item from [docs/11_roadmap_and_contribution.md](docs/11_roadmap_and_contribution.md)

@@ -12,9 +12,16 @@ import json
 import logging
 import math
 import os
+import sys
 from pathlib import Path
 from typing import Any, Iterable
 from urllib import error, request
+
+SRC_ROOT = Path(__file__).resolve().parents[1]
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
+
+from audit.ledger import append_jsonl, default_state_dir, ensure_state_dir, read_jsonl
 
 log = logging.getLogger("aca.memory")
 
@@ -142,14 +149,46 @@ class MemoryStore:
     collection_name: str = DEFAULT_COLLECTION
     qdrant_url: str = field(default_factory=lambda: os.getenv("ACA_QDRANT_URL", DEFAULT_QDRANT_URL))
     enable_qdrant: bool = field(default_factory=lambda: os.getenv("ACA_ENABLE_QDRANT", "1") != "0")
+    state_dir: str | Path | None = None
+    state_file_name: str = "memory_entries.jsonl"
     entries: dict[str, MemoryEntry] = field(default_factory=dict)
+    state_path: Path = field(init=False)
 
     def __post_init__(self) -> None:
+        resolved_state_dir = ensure_state_dir(self.state_dir or default_state_dir())
+        self.state_dir = resolved_state_dir
+        self.state_path = resolved_state_dir / self.state_file_name
+        self._restore_state()
         if self.enable_qdrant and not _probe_qdrant(self.qdrant_url):
             log.warning("Qdrant not reachable; continuing in local-memory mode.")
             self.enable_qdrant = False
         if self.enable_qdrant:
             _ensure_qdrant_collection(self.qdrant_url, self.collection_name, self.dimension)
+
+    def _restore_state(self) -> None:
+        for record in read_jsonl(self.state_path):
+            entry = MemoryEntry(
+                entry_id=record["entry_id"],
+                text=record["text"],
+                kind=record["kind"],
+                source=record.get("source", "local"),
+                metadata=record.get("metadata", {}),
+                embedding=record.get("embedding") or build_embedding(record["text"], self.dimension),
+            )
+            self.entries[entry.entry_id] = entry
+
+    def _append_state(self, entry: MemoryEntry) -> None:
+        append_jsonl(
+            self.state_path,
+            {
+                "entry_id": entry.entry_id,
+                "text": entry.text,
+                "kind": entry.kind,
+                "source": entry.source,
+                "metadata": entry.metadata,
+                "embedding": entry.embedding,
+            },
+        )
 
     def add(
         self,
@@ -172,6 +211,7 @@ class MemoryStore:
             embedding=embedding,
         )
         self.entries[entry_id] = entry
+        self._append_state(entry)
 
         if self.enable_qdrant:
             payload = {
@@ -264,12 +304,20 @@ class MemoryStore:
         Path(path).write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
     def load(self, path: str | Path) -> None:
-        raw = Path(path).read_text(encoding="utf-8")
-        for item in json.loads(raw):
-            self.add(
-                item["text"],
+        raw_path = Path(path)
+        if raw_path.suffix == ".jsonl":
+            records = read_jsonl(raw_path)
+        else:
+            records = json.loads(raw_path.read_text(encoding="utf-8"))
+
+        self.entries.clear()
+        for item in records:
+            entry = MemoryEntry(
+                entry_id=item["entry_id"],
+                text=item["text"],
                 kind=item["kind"],
                 source=item.get("source", "local"),
                 metadata=item.get("metadata", {}),
-                entry_id=item["entry_id"],
+                embedding=item.get("embedding") or build_embedding(item["text"], self.dimension),
             )
+            self.entries[entry.entry_id] = entry
