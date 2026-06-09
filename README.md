@@ -40,6 +40,7 @@ Proyek ini menolak status quo pengembangan AI modern yang terjebak pada pembesar
 - `docs/11_roadmap_and_contribution.md` - roadmap and contributor onboarding
 - `docs/12_memory_and_court.md` - memory and court implementation notes
 - `docs/13_memory_court_audit_trail.md` - persistence and audit trail notes
+- `docs/14_gap_analysis_and_next_steps.md` - detailed gaps and next actions
 
 ## 1. Arsitektur Komputasi: Cloud-to-Edge Stack
 
